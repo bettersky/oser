@@ -1,0 +1,136 @@
+#include "../drivers/inline_func.h"
+void ide_test(unsigned short base,unsigned short ctrl,unsigned char selector){
+	
+	unsigned char feed;
+
+//stop current drive from sending interrupts --beign
+feed=inb(ctrl+2);
+feed=feed|0x1;
+outb(ctrl+2,feed);
+//stop current drive from sending interrupts --end
+
+//select drive --begin
+outb(base+6,selector);
+
+sleep(4);//delay
+//select drive --end
+//poll the status, if not BSY  --begin
+feed=inb(base+7);
+	print_char(' ');
+	print_hex(feed);
+
+//poll the status, if not BSY  --begin
+
+//command --begin
+outb(base+2,0);
+outb(base+3,0);
+outb(base+4,0);
+outb(base+5,0);
+
+outb(base+7,0xec);
+
+	feed=inb(base+7);
+	print_char(' ');
+	print_hex(feed);
+sleep(4);//delay
+//command --end
+	
+//poll the status, if not BSY  --begin
+feed=inb(base+7);
+print_char(' ');
+print_hex(feed);
+
+//poll the status, if not BSY  --begin
+//polling --begin
+while(1){
+	feed=inb(base+7);
+	if(feed&0x1){
+		print_string(" er   \0");
+		print_hex(feed);
+		break;
+	}
+	if(!(feed&0x80)&&(feed&0x08)){
+		print_string(" ok   \0");
+		print_hex(feed);
+		break;
+	}
+}
+//polling --end
+unsigned short read;
+int i;
+	for(i=0;i<256;i++){
+		read=inw(base);
+		print_char(' ');
+		print_hex(i);
+	
+		print_char(':');
+		print_hex(read>>8);
+		print_hex(read);
+		if(i%32==0){
+			print_string("  M \0");
+			feed=inb(base+7);
+			print_hex(feed);
+		}		
+	}
+//poll the status, if not BSY  --begin
+feed=inb(base+7);
+print_char(' ');
+print_hex(feed);
+//poll the status, if not BSY  --begin
+//command read--begin
+outb(base+6,0xE0);
+outb(base+2,1);
+outb(base+3,0);
+outb(base+4,0);
+outb(base+5,0);
+outb(base+7,0x20);
+	feed=inb(base+7);
+	print_char(' ');
+	print_hex(feed);
+sleep(4);//delay
+//command read --end
+//polling --begin
+while(1){
+	feed=inb(base+7);
+	if(feed&0x1){
+		print_string(" er   \0");
+		print_hex(feed);
+		break;
+	}
+	if(!(feed&0x80)&&(feed&0x08)){
+		print_string(" ok   \0");
+		print_hex(feed);
+		break;
+	}
+}
+//polling --end
+//read  --begin
+	unsigned char buf[512];
+print_char(0xd);
+
+	for(i=0;i<256;i++){
+		if(i%8==0){
+			print_char(0xd);
+			print_int_as_hex(i*2);
+			print_string("    \0");
+		}
+		read=inw(base);//the byte 
+		
+		buf[2*i]=*(char *)(&read);
+		buf[2*i+1]=*((char *)(&read)+1);
+		print_hex(buf[2*i]);
+		print_char(' ');
+		print_hex(buf[2*i+1]);
+		print_char(' ');
+		if(i%2==1){
+			print_char(' ');
+		}
+
+	}
+
+
+
+//read  --end
+print_char(0xd);
+}
+

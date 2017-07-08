@@ -1,0 +1,260 @@
+#include "../drivers/inline_func.h"
+char checkDevice(unsigned char bus, unsigned char device,unsigned long) ;
+
+int checkAllBuses(void) {
+	print_string("Bus_No. \0");
+	print_string("Device_No. \0");
+	print_string("Function_No. \0");
+	print_string("vendor \0");
+	print_string("Class \0");
+	print_string("sub_class \0");
+	print_string("header_type \0");
+	print_char(0xd);
+
+	unsigned char bus;
+	unsigned char device;
+	unsigned long function;
+	int count =0;
+ 
+	for(bus = 0; bus < 255; bus++) {
+		for(device = 0; device < 32; device++) {
+			for(function=0;function<8;function++){			
+				if(checkDevice(bus, device,function)) count++;
+				//return 1;	
+			}		
+		}
+	}
+	return count;
+ }
+char checkDevice(unsigned char bus_number, unsigned char device_number,unsigned long function){
+
+	//unsigned long function = 0; //8-10 bit
+	unsigned long register_number=0; //2-7 bit
+	unsigned long addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);;
+	//print_char(' ');
+	//print_int_as_hex(addr);
+ 	outl(0xcf8,addr);
+	unsigned long read_long=inl(0xcfc);//read vendor id and device id
+	//print the info --begin
+	if(read_long != 0xFFFFFFFF){ // Device  exist
+	//print bus No.
+		print_char(' ');
+		print_hex(bus_number);
+	//print device No.
+		print_char(' ');
+		print_hex(device_number);
+	//print functino No.
+		print_char(' ');
+		print_hex(function);
+		//print vendor id and device id
+		//print_char(' ');
+		//print_int_as_hex(read_long);
+
+		//read command and print it --begin
+		register_number=1;
+		addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+		outl(0xcf8,addr);// write new address to port, and then read
+		unsigned long command=inl(0xcfc);
+		command=command&0xffff;
+		//print_char(' ');
+		//print_int_as_hex(command);
+		//read command and print it --end	
+	//read class and print it --begin
+		register_number=2;
+		addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+		outl(0xcf8,addr);// write new address to port, and then read
+		unsigned long class=inl(0xcfc);
+		print_char(' ');
+		print_int_as_hex(class);
+		//read class and print it --end		
+
+	//read BAR0 and print it --begin
+		register_number=4;
+		addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+					|(function)<<8|((unsigned long)0x80000000);
+		outl(0xcf8,addr);// write new address to port, and then read
+		unsigned long bar0 =inl(0xcfc);
+		print_char(' ');
+		print_int_as_hex(bar0);	
+
+	
+		//read BAR0 and print it --end	
+
+	//read bar1 , and print it ---begin
+		
+		register_number=5;
+		addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+					|(function)<<8|((unsigned long)0x80000000);
+		outl(0xcf8,addr);// write new address to port, and then read		
+		unsigned long bar1 =inl(0xcfc);
+		print_char(' ');
+		print_int_as_hex(bar1);
+		//read bar1 , and print it ---end	
+	//read BAR2 and print it --begin
+		register_number=6;
+		addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+					|(function)<<8|((unsigned long)0x80000000);
+		outl(0xcf8,addr);// write new address to port, and then read
+		unsigned long bar2 =inl(0xcfc);
+		print_char(' ');
+		print_int_as_hex(bar2);	
+		//read BAR2 and print it --end	
+	//read BAR3 and print it --begin
+		register_number=7;
+		addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+					|(function)<<8|((unsigned long)0x80000000);
+		outl(0xcf8,addr);// write new address to port, and then read
+		unsigned long bar3 =inl(0xcfc);
+		print_char(' ');
+		print_int_as_hex(bar3);	
+		//read BAR3 and print it --end	
+		
+	//read BAR4 and print it --begin
+		register_number=8;
+		addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+					|(function)<<8|((unsigned long)0x80000000);
+		outl(0xcf8,addr);// write new address to port, and then read
+		unsigned long bar4 =inl(0xcfc);
+		print_char(' ');
+		print_int_as_hex(bar4);	
+		//read BAR4 and print it --end	
+		
+		
+			
+		print_char(0xd);
+		
+		return 1;
+	}   
+	//print the info --end
+	
+	return 0;
+	
+	
+ }
+ 
+void modify_bar_05(unsigned char bus_number, unsigned char device_number,unsigned long function){
+	unsigned long register_number; //2-7 bit		
+	unsigned long addr;
+//modify --begin
+	register_number=4;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	outl(0xcfc,0x1630);
+
+	register_number=5;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	outl(0xcfc,0x1624);
+
+	register_number=6;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	outl(0xcfc,0x1628);
+
+	register_number=7;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	outl(0xcfc,0x1620);
+	
+//modify --end
+	unsigned long bar0=inl(0xcfc);
+	print_char(' ');
+	print_int_as_hex(bar0);	
+
+	//print prog --begin
+	register_number=2;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	unsigned char prog=inb(0xcfd);
+	print_char(' ');
+	print_hex(prog);	
+	//print prog --end
+
+	print_char(0xd);
+
+	
+}
+void modify_bar_02(unsigned char bus_number, unsigned char device_number,unsigned long function){
+	unsigned long register_number; //2-7 bit		
+	unsigned long addr;
+//modify --begin
+	register_number=4;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	outl(0xcfc,0x1688);
+
+	register_number=5;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	outl(0xcfc,0x163c);
+
+	register_number=6;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	outl(0xcfc,0x1680);
+
+	register_number=7;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	outl(0xcfc,0x1638);
+	
+//modify --end
+
+//print --begin
+register_number=4;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	unsigned long bar0=inl(0xcfc);
+	print_char(' ');
+	print_int_as_hex(bar0);	
+
+	register_number=5;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	unsigned long bar1=inl(0xcfc);
+	print_char(' ');
+	print_int_as_hex(bar1);	
+
+	register_number=6;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	unsigned long bar2=inl(0xcfc);
+	print_char(' ');
+	print_int_as_hex(bar2);	
+
+	register_number=7;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	unsigned long bar3=inl(0xcfc);
+	print_char(' ');
+	print_int_as_hex(bar3);	
+	//print prog --begin
+	register_number=2;
+	addr=(bus_number<<16)|(device_number<<11)|(register_number<<2)
+				|(function)<<8|((unsigned long)0x80000000);
+	outl(0xcf8,addr);
+	unsigned long prog=inl(0xcfc);
+	print_char(' ');
+	print_int_as_hex(prog);	
+	//print prog --end
+//print --end
+	print_char(0xd);
+
+}
+

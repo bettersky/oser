@@ -1,0 +1,15 @@
+boot_dir=./boot
+kernel_dir=./kernel
+
+MAKE=make
+os-image: boot/boot_sect.bin  kernel/kernel.bin
+	cat $^ > os-image ; rm -fr ./kernel/*.o ./kernel/*.bin ./boot/*.o ./boot/*.bin drivers/*.o
+	
+boot/boot_sect.bin:
+	cd $(boot_dir) && $(MAKE)
+kernel/kernel.bin:
+	cd $(kernel_dir) && $(MAKE)
+
+clean:
+	rm -fr *.bin *.dis *.o os-image
+	rm -fr ./kernel/*.o ./kernel/*.bin ./boot/*.o ./boot/*.bin drivers/*.o

@@ -1,0 +1,52 @@
+[org 0x7c00]
+
+mov ah,0xe
+mov cx,3
+mov al,0x31
+read:    
+	mov ah,0x42
+	mov dl,0x80
+
+	mov si,0x0
+	mov ds,si
+	mov si,0x8000
+	mov byte [si],0x10  ;size of packet (10h or 18h)
+	mov word [si+2],0x1  ;number of blocks to transfer (max 007Fh for Phoenix EDD)
+	mov dword[si+4],0x9c00  ;transfer buffer
+	mov dword[si+8],0x1 ;starting absolute block number
+	mov dword[si+12],0x0
+	int 0x13  
+	jnc read_end 
+	int 10h
+	inc al
+	dec cx
+	cmp cx,0
+	jz disk_error	
+read_end:
+
+mov bp,0x9000 ;set the stack
+mov sp,bp
+mov bx,MSG_REAL_MODE
+call print_string
+call switch_to_pm
+jmp $
+
+disk_error:
+	mov bx,ERR
+	call print_string
+
+jmp $
+%include "print_string.asm"
+
+%include "./include/gdt.asm"
+	
+%include "./include/switch_to_pm.asm"
+	
+MSG_REAL_MODE:
+	db "Start in 16-bit real mode",0
+
+ERR:
+db "Disk Eroor:",0
+
+times 0200h - 2 - ($ - $$)  db 0    ; NASM directive: zerofill up to 510 bytes
+dw 0AA55h
