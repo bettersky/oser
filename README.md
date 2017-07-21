@@ -1,2 +1,1 @@
-
-A toy OS.
+Backup of my toy OS.
